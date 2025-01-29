@@ -30,7 +30,9 @@ class _TimerWidgetState extends State<TimerWidget> {
   Duration initialDuration = Duration();
 
 
-  void reset () {
+
+
+  void stop() {
     timer?.cancel();
     setState(() {
       progressValue = 1;
@@ -57,7 +59,7 @@ class _TimerWidgetState extends State<TimerWidget> {
         final seconds = duration.inSeconds - 1;
 
         if (seconds < 0) {
-            reset();
+            stop();
         } else {
           setState(() {
             duration = Duration(seconds: seconds);
@@ -71,13 +73,41 @@ class _TimerWidgetState extends State<TimerWidget> {
     );
   }
 
-  void stop() {
-    timer?.cancel();
-    setState(() {
-      isNotActive = true;
-    });
-  }
 
+  void reset () {
+    timer?.cancel();
+
+    setState(() {
+      progressValue = 1;
+      duration = Duration(
+        hours: hourValue,
+        minutes: minuteValue,
+        seconds: secondValue,
+      );
+      initialDuration = duration;
+      sec  = duration.inSeconds.remainder(60);
+      minute  = duration.inMinutes.remainder(60);
+      hour  = duration.inHours.remainder(24);
+    });
+    timer = Timer.periodic(
+      Duration(seconds: 1),
+          (timer) {
+        final seconds = duration.inSeconds - 1;
+
+        if (seconds < 0) {
+          stop();
+        } else {
+          setState(() {
+            duration = Duration(seconds: seconds);
+            progressValue = duration.inSeconds / initialDuration.inSeconds;
+            sec = duration.inSeconds.remainder(60);
+            minute = duration.inMinutes.remainder(60);
+            hour = duration.inHours.remainder(24);
+          });
+        }
+      },
+    );
+  }
   void pause () {
     timer?.cancel();
     setState(() {
@@ -104,7 +134,7 @@ class _TimerWidgetState extends State<TimerWidget> {
         final seconds = duration.inSeconds - 1;
 
         if (seconds < 0) {
-          reset();
+          stop();
         } else {
           setState(() {
             duration = Duration(seconds: seconds);
@@ -175,71 +205,78 @@ class _TimerWidgetState extends State<TimerWidget> {
                     ],
                   ),
                 )
-              : SizedBox(
-                  height: 380,
-                  width: 380,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      CircularProgressIndicator(
-                        value: progressValue,
-                        valueColor:
-                            AlwaysStoppedAnimation(Colors.blue.shade900),
-                        backgroundColor: Colors.blue,
-                        strokeWidth: 8,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+              : Column(
+                children: [
+                  SizedBox(
+                    height: 50,
+                  ),
+                  SizedBox(
+                      height: 300,
+                      width: 300,
+                      child: Stack(
+                        fit: StackFit.expand,
                         children: [
-                          Expanded(
-                            flex: 4,
-                            child: Text(
-                              hour.toString().padLeft(2, '0'),
-                              style: textStyle.copyWith(
-                                  color: Colors.blue.shade800),
-                              textAlign: TextAlign.center,
-                            ),
+                          CircularProgressIndicator(
+                            value: progressValue,
+                            valueColor:
+                                AlwaysStoppedAnimation(Colors.green.shade900),
+                            backgroundColor: Colors.greenAccent,
+                            strokeWidth: 8,
                           ),
-                          Expanded(
-                            flex: 1,
-                            child: Text(
-                              ":",
-                              style: textStyle,
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          Expanded(
-                            flex: 4,
-                            child: Text(
-                              minute.toString().padLeft(2, '0'),
-                              style: textStyle.copyWith(
-                                  color: Colors.blue.shade800),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Text(
-                              ":",
-                              style: textStyle,
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          Expanded(
-                            flex: 4,
-                            child: Text(
-                              sec.toString().padLeft(2, '0'),
-                              style: textStyle.copyWith(
-                                  color: Colors.blue.shade800),
-                              textAlign: TextAlign.center,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                flex: 4,
+                                child: Text(
+                                  hour.toString().padLeft(2, '0'),
+                                  style: textStyle.copyWith(
+                                      color: Colors.blue.shade800),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: Text(
+                                  ":",
+                                  style: textStyle,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Expanded(
+                                flex: 4,
+                                child: Text(
+                                  minute.toString().padLeft(2, '0'),
+                                  style: textStyle.copyWith(
+                                      color: Colors.blue.shade800),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: Text(
+                                  ":",
+                                  style: textStyle,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Expanded(
+                                flex: 4,
+                                child: Text(
+                                  sec.toString().padLeft(2, '0'),
+                                  style: textStyle.copyWith(
+                                      color: Colors.blue.shade800),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
+                ],
+              ),
           isNotActive
               ? Expanded(
                   flex: 1,
@@ -261,48 +298,60 @@ class _TimerWidgetState extends State<TimerWidget> {
                     ),
                   ),
                 )
-              : Expanded(
-                  flex: 1,
-                  child: TextButton(
-                    onPressed: () => stop(),
-                    child: Container(
-                      alignment: Alignment.center,
-                      height: 40,
-                      width: MediaQuery.of(context).size.width / 2,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(35.0),
-                          color: Colors.red),
-                      child: Text(
-                        "Stop",
-                        style: TextStyle(
-                          color: Colors.white,
+              : Column(
+                children: [
+                  SizedBox(
+                    height: 30,
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                          flex: 1,
+                          child: TextButton(
+                            onPressed: () => stop(),
+                            child: Container(
+                              alignment: Alignment.center,
+                              height: 40,
+                              width: MediaQuery.of(context).size.width / 2,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(35.0),
+                                  color: Colors.red),
+                              child: Text(
+                                "Stop",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      Expanded(
+                        flex: 1,
+                        child: TextButton(
+                          onPressed: () => reset(),
+                          child: Container(
+                            alignment: Alignment.center,
+                            height: 40,
+                            width: MediaQuery.of(context).size.width / 2,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(35.0),
+                                color: Colors.grey.shade500),
+                            child: Text(
+                              "Reset",
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ),
-          isNotActive
-              ? SizedBox()
-              : Expanded(
-                  flex: 1,
-                  child: TextButton(
-                    onPressed: () => reset(),
-                    child: Container(
-                      alignment: Alignment.center,
-                      height: 40,
-                      width: MediaQuery.of(context).size.width / 2,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(35.0),
-                          color: Colors.grey.shade500),
-                      child: Text(
-                        "Reset",
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                ],
+              ),
+          SizedBox(
+            height: 30,
+          ),
 
           isNotActive
               ? SizedBox()
